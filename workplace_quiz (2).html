@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار دليل بيئة العمل</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f8; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 560px; margin: 0 auto; padding: 2rem 1rem; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Landing */
+  .hero { text-align: center; padding: 1rem 0 1.5rem; }
+  .badge { display: inline-block; background: #E1F5EE; color: #0F6E56; font-size: 13px; font-weight: 600; padding: 5px 16px; border-radius: 20px; margin-bottom: 1rem; }
+  .hero h1 { font-size: 24px; font-weight: 700; color: #0F6E56; margin-bottom: 0.5rem; line-height: 1.4; }
+  .hero p { font-size: 14px; color: #555; margin-bottom: 1.5rem; line-height: 1.6; }
+  .qr-card { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08); max-width: 280px; margin: 0 auto 1.5rem; text-align: center; }
+  #qr-code { display: flex; justify-content: center; margin-bottom: 0.75rem; }
+  #qr-code canvas, #qr-code img { border-radius: 6px; }
+  .qr-label { font-size: 13px; color: #666; font-weight: 500; }
+  .pills { display: flex; justify-content: center; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .pill { background: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 5px 14px; font-size: 12px; color: #555; }
+  .btn-primary { background: #0F6E56; color: white; border: none; border-radius: 10px; padding: 13px 40px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .btn-primary:hover { background: #0a5240; }
+
+  /* Quiz */
+  .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+  .q-counter { font-size: 13px; color: #666; font-weight: 500; }
+  .cat-tag { font-size: 12px; font-weight: 600; padding: 3px 12px; border-radius: 10px; background: #FFF3DC; color: #BA7517; }
+  .progress-bar { height: 6px; background: #e8e8e8; border-radius: 3px; margin-bottom: 1.5rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #0F6E56; border-radius: 3px; transition: width .35s ease; }
+  .card { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 1rem; }
+  .q-text { font-size: 17px; font-weight: 600; color: #111; line-height: 1.6; margin-bottom: 1.25rem; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt { border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #222; cursor: pointer; text-align: right; line-height: 1.5; background: white; transition: border-color .15s, background .15s; }
+  .opt:hover:not(.disabled) { border-color: #0F6E56; background: #E1F5EE; }
+  .opt.ok { background: #EAF3DE; border-color: #3B6D11; color: #235108; font-weight: 600; }
+  .opt.bad { background: #FDEDED; border-color: #A32D2D; color: #7a1f1f; font-weight: 600; }
+  .opt.show-ok { background: #EAF3DE; border-color: #3B6D11; color: #235108; }
+  .opt.disabled { cursor: default; }
+  .feedback { margin-top: 1rem; padding: 12px 16px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
+  .feedback.correct { background: #EAF3DE; color: #235108; border: 1px solid #3B6D11; }
+  .feedback.wrong { background: #FDEDED; color: #7a1f1f; border: 1px solid #A32D2D; }
+  .btn-next { margin-top: 1rem; background: #0F6E56; color: white; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; transition: background .15s; }
+  .btn-next:hover { background: #0a5240; }
+
+  /* Results */
+  .result-card { background: white; border-radius: 16px; padding: 2rem 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); text-align: center; margin-bottom: 1rem; }
+  .score-ring { width: 110px; height: 110px; margin: 0 auto 1rem; position: relative; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 24px; font-weight: 700; color: #111; }
+  .res-title { font-size: 19px; font-weight: 700; color: #111; margin-bottom: 0.4rem; }
+  .res-sub { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+  .stats-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
+  .stat-box { flex: 1; max-width: 110px; background: #f4f6f8; padding: 12px; border-radius: 10px; }
+  .stat-n { font-size: 24px; font-weight: 700; }
+  .stat-l { font-size: 11px; color: #666; margin-top: 2px; }
+  .btn-retry { background: white; color: #0F6E56; border: 1.5px solid #0F6E56; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; transition: background .15s; }
+  .btn-retry:hover { background: #E1F5EE; }
+  .review-title { font-size: 16px; font-weight: 700; color: #111; margin: 1.5rem 0 0.75rem; }
+  .ri { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 13px; line-height: 1.5; }
+  .ri:last-child { border-bottom: none; }
+  .ri-ic { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .ri-ic.ok { background: #EAF3DE; color: #235108; }
+  .ri-ic.no { background: #FDEDED; color: #7a1f1f; }
+  .ri-body { flex: 1; }
+  .ri-wrong { color: #999; margin-top: 3px; }
+  .ri-right { color: #3B6D11; font-weight: 600; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="s-land" class="screen active">
+    <div class="hero">
+      <div class="badge">اختبار تفاعلي</div>
+      <h1>دليل المستخدم لبيئة العمل<br>حقوق وواجبات الموظف</h1>
+      <p>9 أسئلة تغطي الالتزامات المهنية، ساعات العمل، والإجازات<br>المواد 15 إلى 35 من أحكام العمل الأساسية</p>
+      <div class="qr-card">
+        <div id="qr-code"></div>
+        <div class="qr-label">امسح الكود لفتح الاختبار على هاتفك</div>
+      </div>
+      <div class="pills">
+        <div class="pill">9 أسئلة</div>
+        <div class="pill">~5 دقائق</div>
+        <div class="pill">نتيجة فورية</div>
+      </div>
+      <button class="btn-primary" onclick="startQuiz()">ابدأ الاختبار</button>
+    </div>
+  </div>
+
+  <div id="s-quiz" class="screen">
+    <div class="q-header">
+      <span class="q-counter" id="q-counter"></span>
+      <span class="cat-tag" id="q-cat"></span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+    <div class="card">
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options"></div>
+      <div id="feedback" class="feedback" style="display:none"></div>
+      <button id="btn-next" class="btn-next" style="display:none" onclick="nextQ()"></button>
+    </div>
+  </div>
+
+  <div id="s-result" class="screen">
+    <div class="result-card">
+      <div class="score-ring">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle cx="55" cy="55" r="46" fill="none" stroke="#eee" stroke-width="9"/>
+          <circle id="arc" cx="55" cy="55" r="46" fill="none" stroke="#0F6E56" stroke-width="9" stroke-linecap="round"
+            stroke-dasharray="289.0" stroke-dashoffset="289.0" style="transition:stroke-dashoffset .9s ease"/>
+        </svg>
+        <div class="score-num" id="score-num"></div>
+      </div>
+      <div class="res-title" id="res-title"></div>
+      <div class="res-sub" id="res-sub"></div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-n" id="s-ok" style="color:#3B6D11"></div><div class="stat-l">صحيحة</div></div>
+        <div class="stat-box"><div class="stat-n" id="s-no" style="color:#A32D2D"></div><div class="stat-l">خاطئة</div></div>
+        <div class="stat-box"><div class="stat-n" id="s-pct" style="color:#BA7517"></div><div class="stat-l">النسبة</div></div>
+      </div>
+      <button class="btn-retry" onclick="startQuiz()">إعادة الاختبار</button>
+    </div>
+    <div class="review-title">مراجعة الإجابات</div>
+    <div id="review"></div>
+  </div>
+
+</div>
+<script>
+const Q = [
+  {cat:"الالتزامات المهنية",q:"ما الإجراء الواجب بشأن السكن الوظيفي الموفَّر من صاحب العمل عند انتهاء الخدمة؟",opts:["الاحتفاظ به 60 يوماً","إخلاؤه خلال 30 يوماً","إخلاؤه فوراً","إخلاؤه خلال 15 يوماً"],ans:1,exp:"يجب على الموظف إخلاء السكن الوظيفي خلال 30 يوماً من تاريخ انتهاء الخدمة."},
+  {cat:"الالتزامات المهنية",q:"هل يجوز للموظف العمل لدى جهة أخرى بالتوازي مع عمله الأصلي؟",opts:["نعم، دون قيود","نعم، وفق الضوابط المعتمدة فقط","لا، يُحظر تماماً","نعم، بشرط الإفصاح للإدارة"],ans:1,exp:"لا يجوز العمل لدى الغير إلا وفق الضوابط المعتمدة من صاحب العمل."},
+  {cat:"ساعات العمل",q:"ما الحد الأقصى لساعات العمل المتواصلة قبل الاستراحة الإلزامية؟",opts:["4 ساعات","5 ساعات","6 ساعات","8 ساعات"],ans:1,exp:"الحد الأقصى للعمل المتصل هو 5 ساعات متتالية، وبعدها يصبح أخذ الاستراحة إلزامياً."},
+  {cat:"ساعات العمل",q:"ما معدل أجر الساعات الإضافية من 10 مساءً حتى 4 صباحاً أو لعمال الوردية؟",opts:["الأجر الأساسي + 25%","الأجر الأساسي + 50%","الأجر الأساسي + 75%","الأجر الأساسي + 100%"],ans:1,exp:"تُعوَّض هذه الساعات بالأجر الأساسي مضافاً إليه 50%."},
+  {cat:"ساعات العمل",q:"ما الحد الأقصى الإجمالي للساعات الإضافية المسموح بها كل 3 أسابيع؟",opts:["48 ساعة","72 ساعة","100 ساعة","144 ساعة"],ans:3,exp:"الحد الأقصى (Master Tank) هو 144 ساعة إضافية كل 3 أسابيع."},
+  {cat:"الإجازات",q:"كم تبلغ مدة إجازة الوضع مدفوعة الأجر الكامل؟",opts:["30 يوماً","45 يوماً","60 يوماً","90 يوماً"],ans:1,exp:"أول 45 يوماً بأجر كامل، ثم 15 يوماً بنصف أجر، بإجمالي 60 يوماً."},
+  {cat:"الإجازات",q:"ما مدة إجازة الحداد عند وفاة الزوج أو الزوجة؟",opts:["3 أيام","5 أيام","7 أيام","10 أيام"],ans:1,exp:"تُمنح إجازة حداد مدتها 5 أيام عند وفاة الزوج أو الزوجة."},
+  {cat:"الإجازات",q:"ما فترة الإجازة المرضية التي تُصرف بالأجر الكامل؟",opts:["أول 30 يوماً","أول 15 يوماً","أول 45 يوماً","طوال مدة المرض"],ans:1,exp:"أول 15 يوماً بأجر كامل، ثم 30 يوماً بنصف الأجر."},
+  {cat:"التوازن في العمل",q:"خلال كم يوماً يجب تقديم التقرير الطبي المعتمد عند الغياب المرضي؟",opts:["خلال 24 ساعة","خلال يومين","خلال 3 أيام","خلال 7 أيام"],ans:2,exp:"يجب تقديم تقرير طبي معتمد خلال 3 أيام من الانقطاع عن العمل."}
+];
+
+let cur=0,sc=0,ans=[],done=false;
+
+window.onload = function() {
+  new QRCode(document.getElementById('qr-code'), {
+    text: window.location.href,
+    width: 180, height: 180,
+    colorDark: '#0F6E56', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+};
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function startQuiz(){ cur=0;sc=0;ans=[];show('s-quiz');renderQ(); }
+
+function renderQ(){
+  const q=Q[cur]; done=false;
+  document.getElementById('q-counter').textContent='السؤال '+(cur+1)+' من '+Q.length;
+  document.getElementById('q-cat').textContent=q.cat;
+  document.getElementById('prog').style.width=(((cur+1)/Q.length)*100)+'%';
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('btn-next').style.display='none';
+  const el=document.getElementById('options'); el.innerHTML='';
+  q.opts.forEach(function(o,i){ const d=document.createElement('div'); d.className='opt'; d.textContent=o; d.onclick=function(){pick(i);}; el.appendChild(d); });
+}
+
+function pick(i){
+  if(done)return; done=true;
+  const q=Q[cur]; const ok=i===q.ans;
+  const opts=document.querySelectorAll('.opt');
+  opts.forEach(function(o){o.classList.add('disabled');});
+  opts[i].classList.add(ok?'ok':'bad');
+  if(!ok) opts[q.ans].classList.add('show-ok');
+  if(ok) sc++;
+  ans.push({q:q.q,chosen:q.opts[i],correct:q.opts[q.ans],ok:ok});
+  const fb=document.getElementById('feedback');
+  fb.style.display='block'; fb.className='feedback '+(ok?'correct':'wrong');
+  fb.innerHTML='<strong>'+(ok?'✓ إجابة صحيحة':'✗ إجابة خاطئة')+'</strong> — '+q.exp;
+  const bn=document.getElementById('btn-next');
+  bn.style.display='block'; bn.textContent=cur<Q.length-1?'السؤال التالي ←':'عرض النتائج ←';
+}
+
+function nextQ(){ cur++; if(cur<Q.length){renderQ();}else{showRes();} }
+
+function showRes(){
+  show('s-result');
+  const pct=Math.round(sc/Q.length*100);
+  document.getElementById('s-ok').textContent=sc;
+  document.getElementById('s-no').textContent=Q.length-sc;
+  document.getElementById('s-pct').textContent=pct+'%';
+  document.getElementById('score-num').textContent=sc+'/10';
+  const circ=2*Math.PI*46;
+  setTimeout(function(){
+    var arc=document.getElementById('arc');
+    arc.style.strokeDashoffset=circ-(circ*pct/100);
+    arc.style.stroke=pct>=70?'#0F6E56':pct>=50?'#BA7517':'#A32D2D';
+  },100);
+  var t=pct>=90?['ممتاز! أنت ملمٌّ باللوائح بشكل كامل','معرفة عالية بحقوق وواجبات الموظف']:pct>=70?['جيد جداً، استمر في التطوير','فهم جيد لمعظم المواد']:pct>=50?['مقبول، راجع المواد التي أخطأت فيها','أعد قراءة الأقسام المعنية']:['تحتاج لمراجعة الدليل كاملاً','ننصح بإعادة قراءة دليل بيئة العمل'];
+  document.getElementById('res-title').textContent=t[0];
+  document.getElementById('res-sub').textContent=t[1];
+  var rv=document.getElementById('review'); rv.innerHTML='';
+  ans.forEach(function(a,i){
+    var d=document.createElement('div'); d.className='ri';
+    d.innerHTML='<div class="ri-ic '+(a.ok?'ok':'no')+'">'+(a.ok?'✓':'✗')+'</div><div class="ri-body"><div>'+(i+1)+'. '+a.q+'</div>'+(!a.ok?'<div class="ri-wrong">إجابتك: '+a.chosen+'</div><div class="ri-right">الصواب: '+a.correct+'</div>':'')+'</div>';
+    rv.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
